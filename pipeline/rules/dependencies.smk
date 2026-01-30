@@ -701,6 +701,50 @@ rule download_ld_blocks:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+# VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS #
+
+# Download VIPRS LD reference panels
+
+viprs_ld_ref_url = {
+    'eur': 'https://github.com/shz9/viprs/releases/download/v0.1.2/EUR.tar.gz',
+    'eas': 'https://github.com/shz9/viprs/releases/download/v0.1.2/EAS.tar.gz',
+    'afr': 'https://github.com/shz9/viprs/releases/download/v0.1.2/AFR.tar.gz',
+    'amr': 'https://github.com/shz9/viprs/releases/download/v0.1.2/AMR.tar.gz',
+    'csa': 'https://github.com/shz9/viprs/releases/download/v0.1.2/CSA.tar.gz',
+    'mid': 'https://github.com/shz9/viprs/releases/download/v0.1.2/MID.tar.gz'
+}
+
+rule download_viprs_ld_ref:
+  output:
+    f"{resdir}/data/viprs_ld/{{population}}/chr_1/.zgroup"
+  benchmark:
+    f"{resdir}/data/benchmarks/download_viprs_ld_ref-{{population}}.txt"
+  log:
+    f"{resdir}/data/logs/download_viprs_ld_ref-{{population}}.log"
+  params:
+    url=lambda w: viprs_ld_ref_url.get(w.population)
+  shell:
+    """
+    {{
+      mkdir -p $(dirname {output[0]}) \
+      rm -rf {resdir}/data/viprs_ld/{wildcards.population}; \
+      OUTPUT_FILE="{resdir}/data/viprs_ld/{wildcards.population}.tar.gz"; \
+      wget --no-check-certificate -O $OUTPUT_FILE {params.url}; \
+      tar -zxvf $OUTPUT_FILE -C {resdir}/data/viprs_ld/{wildcards.population}/; \
+      rm $OUTPUT_FILE
+    }} > {log} 2>&1
+    """
+
+rule download_viprs_ld_ref_all:
+  input:
+    lambda w: expand(f"{resdir}/data/viprs_ld/{{population}}/chr_1/.zgroup", population=['eur','eas','afr','amr','csa', 'mid'])
+
+
+# VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS VIPRS #
+# ===============================================================================
+# PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs PRScs #
+
 # Download UKB-based PRScs reference
 # Note. Using Yengo Height GWAS with OpenSNP target, using the UKB reference performed significantly worse than the 1KG reference.
 prscs_ref_ukb_dropbox = {
@@ -838,6 +882,8 @@ rule download_prscs_snp_data_1kg:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # Download gctb reference
 rule download_gctb_ref:
   output:
@@ -971,6 +1017,8 @@ rule install_sbayesrc:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # Install GenoUtils in SBayesRC environment
 rule install_genoutils_sbayesrc:
   input:
@@ -989,6 +1037,8 @@ rule install_genoutils_sbayesrc:
       Rscript -e 'devtools::install_github(\"opain/GenoUtils@6334159ab5d95ce936896e6938a1031c38ed4f30\")'
     }} > {log} 2>&1
     """
+
+# ===============================================================================
 
 # Download LDpred2 reference
 # This is the file from https://figshare.com/ndownloader/articles/19213299/versions/2, shared by the ldpred2 developer
@@ -1013,6 +1063,8 @@ rule download_ldpred2_ref:
       rm -r {resdir}/data/ldpred2_ref/EUR/ldref
     }} > {log} 2>&1
     """
+
+# ===============================================================================
 
 # Download LDAK
 rule download_ldak:
@@ -1195,6 +1247,8 @@ rule download_quickprs_leopard_ref_all:
   input:
     lambda w: expand(f"{resdir}/data/quickprs_leopard/{{population}}/{{population}}.subset_1.bed", population=['EUR', 'EAS', 'AFR'])
 
+# ===============================================================================
+
 # Download preprocessed reference data (1KG+HGDP HapMap3)
 rule download_default_ref:
   output:
@@ -1216,6 +1270,8 @@ rule download_default_ref:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # install ggchicklet
 rule install_ggchicklet:
   input:
@@ -1234,6 +1290,8 @@ rule install_ggchicklet:
       Rscript -e 'remotes::install_github(\"hrbrmstr/ggchicklet@64c468dd0900153be1690dbfc5cfb35710da8183\")'
     }} > {log} 2>&1
     """
+
+# ===============================================================================
 
 # install lassosum
 rule install_lassosum:
@@ -1254,6 +1312,8 @@ rule install_lassosum:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # install sdpr
 rule install_sdpr:
   output:
@@ -1271,6 +1331,8 @@ rule install_sdpr:
       git reset --hard 0bb6481802903452272ef6f0a8c5bbf4b362fe9d
     }} > {log} 2>&1
     """
+
+# ===============================================================================
 
 # Install GenoUtils
 rule install_genoutils:
@@ -1291,6 +1353,8 @@ rule install_genoutils:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # Download pgscatalog_utils
 rule download_pgscatalog_utils:
   output:
@@ -1307,6 +1371,8 @@ rule download_pgscatalog_utils:
     echo "Environment setup triggered" > {log}
     touch {output}
     """
+
+# ===============================================================================
 
 # Download XPASS for X-wing dependencies
 rule install_xpass:
@@ -1327,6 +1393,8 @@ rule install_xpass:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # Install GenoUtils in X-wing environment
 rule install_genoutils_xwing:
   input:
@@ -1345,6 +1413,8 @@ rule install_genoutils_xwing:
       Rscript -e 'devtools::install_github(\"opain/GenoUtils@6334159ab5d95ce936896e6938a1031c38ed4f30\")'
     }} > {log} 2>&1
     """
+
+# ===============================================================================
 
 # Download X-wing repo
 rule download_xwing_software:
@@ -1369,6 +1439,8 @@ rule download_xwing_software:
     }} > {log} 2>&1
     """
 
+# ===============================================================================
+
 # Download LOGODetect (X-wing) reference data
 rule download_logodetect_ref:
   output:
@@ -1390,6 +1462,8 @@ rule download_logodetect_ref:
 rule download_logodetect_ref_all:
   input:
     lambda w: expand(f"{resdir}/data/LOGODetect_1kg_ref/{{population}}/1000G_{{population}}_QC.bim", population=['EUR','EAS','AFR','SAS','AMR'])
+
+# ===============================================================================
 
 # Download PANTHER (X-wing) reference data
 # The reference data is the same as the PRS-CS reference data
@@ -1458,7 +1532,7 @@ rule download_leopard_panther_snp_data:
     }} > {log} 2>&1
     """
 
-############
+# ===============================================================================
 
 # Install TL-PRS
 rule install_tlprs:
@@ -1477,7 +1551,7 @@ rule install_tlprs:
     }} > {log} 2>&1
     """
 
-############
+# ===============================================================================
 
 # Install GenoUtils in BridgePRS environment
 rule install_genoutils_bridgeprs:
@@ -1515,7 +1589,9 @@ rule download_bridgeprs_software:
       git reset --hard aeea807c9640e28f45dac24a9b5d524a3f11f7f2
     }} > {log} 2>&1
     """
-    
+
+# ===============================================================================
+
 # Install R packages (handy function for when conda env updates erroneously)
 rule install_r_packages:
   input:
