@@ -13,18 +13,18 @@ import subprocess
 import re
 import glob
 
-######
+################################################
 # Check genopred conda env is activated
-######
+################################################
 
 conda_env_name = os.getenv('CONDA_DEFAULT_ENV')
 if not conda_env_name == 'genopred':
   print("Error: The genopred conda environment must be active when running the pipeline.\nFor more information: https://opain.github.io/GenoPred/pipeline_readme.html#Step_2:_Create_conda_environment_for_pipeline")
   sys.exit(1)
 
-########
+##############################################################
 # Create required functions
-########
+##############################################################
 
 # Create function to check whether path of gwas or score exist
 def check_list_paths(df):
@@ -86,9 +86,9 @@ def check_target_type(df, column='type'):
     if not invalid_formats.empty:
         raise ValueError(f"Invalid format entries found in column '{column}': {invalid_formats[column].unique()}. Must be either 'plink1', 'plink2', 'vcf', 'bgen' or '23andMe'")
 
-######
+############################################################
 # Check config file
-######
+############################################################
 
 def check_config_parameters(config):
     required_params = [
@@ -117,9 +117,9 @@ check_config_parameters(config)
 # Set outdir parameter
 outdir=config['outdir']
 
-#######
+#############################################################
 # Check config files
-#######
+#############################################################
 
 # Function to check for duplicate names in a dataframe
 def check_for_duplicates(df, name_col, list_name):
@@ -128,9 +128,9 @@ def check_for_duplicates(df, name_col, list_name):
         raise ValueError(f"Duplicate values found in '{name_col}' column of {list_name}: {', '.join(duplicate_names[name_col].unique())}")
 
 
-###
+###############################################################
 # target_list
-###
+###############################################################
 
 if 'target_list' in config and config["target_list"] != 'NA':
   target_list_df = pd.read_table(config["target_list"], sep=r'\s+')
@@ -177,9 +177,9 @@ check_list_paths(gwas_list_df)
 # Identify gwas_list with population == 'EUR'
 gwas_list_df_eur = gwas_list_df.loc[gwas_list_df['population'] == 'EUR']
 
-###
+#####################################################################
 # score_list
-###
+#####################################################################
 
 # Read in score_list or create empty score_list
 if 'score_list' in config and config["score_list"] != 'NA':
@@ -201,9 +201,9 @@ check_for_duplicates(score_list_df, 'name', 'score_list')
 # Check whether score_list paths exist
 check_list_paths(score_list_df)
 
-###
+###########################################################################
 # gwas_groups
-###
+###########################################################################
 
 # Read in the gwas_groups or make an empty version
 if 'gwas_groups' in config and config["gwas_groups"] != 'NA':
@@ -238,9 +238,9 @@ if missing_gwas:
 # Subset gwas_groups to those with 2 GWAS specified
 gwas_groups_df_two = gwas_groups_df[gwas_groups_df['gwas'].str.count(',') == 1]
 
-###
+###############################################################
 # Check there are no duplicate values in name columns of gwas_list, score_list, gwas_groups
-###
+###############################################################
 
 def check_for_duplicates_across_lists(df_list, name_col, list_names):
     combined_names = pd.concat([df[name_col] for df in df_list])
@@ -257,7 +257,7 @@ check_for_duplicates_across_lists(
     list_names=['gwas_list', 'score_list', 'gwas_groups']
 )
 
-#########
+#####################################################################
 # Set PRS-CS ld reference path
 if config['prscs_ldref'] == 'ukb':
     prscs_ldref='ukbb'
@@ -419,9 +419,9 @@ if "sbayesrc" in config["pgs_methods"]:
           print(f"File not found: {cors_file}")
           raise FileNotFoundError(f"Required file not found: {cors_file}. sbayesrc reference data must include ldm.info for all populations.")
 
-####
+################################################################
 # Check reference data
-####
+################################################################
 if config['refdir'] == 'NA':
     refdir = f"{resdir}/data/ref"
     ref_input=f"{refdir}/ref.pop.txt"
@@ -460,7 +460,7 @@ else:
         if not os.path.exists(full_path):
             raise FileNotFoundError(f"File not found: {full_path}. Check reference data format.")
 
-#####
+###########################################################
 
 # Check valid pgs_methods are specified
 def check_pgs_methods(x):
@@ -469,7 +469,7 @@ def check_pgs_methods(x):
         return
 
     valid_pgs_methods = {
-        "ptclump", "dbslmm", "prscs", "sbayesr","sbayesrc", "lassosum", "ldpred2", "lassosum2", "megaprs", "quickprs", "sdpr", "xwing", "prscsx", "bridgeprs"
+        "ptclump", "dbslmm", "viprs", "prscs", "sbayesr","sbayesrc", "lassosum", "ldpred2", "lassosum2", "megaprs", "quickprs", "sdpr", "xwing", "prscsx", "bridgeprs"
     }
 
     invalid_methods = [method for method in x if method not in valid_pgs_methods]
@@ -483,7 +483,7 @@ check_pgs_methods(config['pgs_methods'])
 # Check valid tlprs_methods are specified
 def check_tlprs_methods(config):
     valid_tlprs_methods = {
-        "ptclump", "dbslmm", "prscs", "sbayesrc", "lassosum", "ldpred2", "lassosum2", "sdpr", "megaprs", "quickprs"
+        "ptclump", "dbslmm", "viprs", "prscs", "sbayesrc", "lassosum", "ldpred2", "lassosum2", "sdpr", "megaprs", "quickprs"
     }
 
     # Check if 'tlprs_methods' is empty
@@ -500,7 +500,7 @@ check_tlprs_methods(config)
 # Check valid leopard_methods are specified
 def check_leopard_methods(config):
     valid_leopard_methods = {
-        "ptclump", "dbslmm", "prscs", "sbayesrc", "lassosum", "ldpred2", "lassosum2", "megaprs", "quickprs", "sdpr"
+        "ptclump", "dbslmm", "viprs", "prscs", "sbayesrc", "lassosum", "ldpred2", "lassosum2", "megaprs", "quickprs", "sdpr"
     }
 
     # Check if 'leopard_methods' is empty
@@ -514,9 +514,9 @@ def check_leopard_methods(config):
 
 check_leopard_methods(config)
 
-########
+##############################################################
 # Check for repo version updates
-########
+##############################################################
 
 # If there has been a change to the major or minor version numbers, we will rerun the entire pipeline
 
@@ -565,9 +565,9 @@ else:
             print("Proceeding with version update due to overwrite=true config.")
             write_last_version(current_major, current_minor)  # Update the stored version
 
-########
+##############################################################
 # Download dependencies
-########
+##############################################################
 
 # Download impute2_data
 rule download_impute2_data:
@@ -1642,7 +1642,14 @@ rule get_key_resources:
     rules.download_default_ref.output
   output:
     touch(f"{resdir}/software/get_key_resources.done")
-    
+
+rule get_viprs_resources:
+  input:
+    rules.get_key_resources.output,
+    rules.download_viprs_ld_ref_all.output
+  output:
+    touch(f"{resdir}/software/get_viprs_resources.done")
+
 rule get_prscs_resources:
   input:
     rules.get_key_resources.output,
@@ -1709,6 +1716,7 @@ rule get_quickprs_resources:
 rule get_all_resources:
   input:
     rules.get_key_resources.output,
+    rules.get_viprs_resources.output,
     rules.get_prscs_resources.output,
     rules.get_sbayesr_resources.output,
     rules.get_ldpred2_resources.output,
