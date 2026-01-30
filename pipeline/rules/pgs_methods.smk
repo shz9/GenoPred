@@ -29,9 +29,9 @@ populations=["AFR","AMR","CSA","EAS","EUR","MID","TRANS"]
 rule ref_pca:
   input: expand(f"{outdir}/reference/pc_score_files/{{population}}/ref-{{population}}-pcs.EUR.scale", population=populations)
 
-##
+##############################################################
 # QC and format GWAS summary statistics
-##
+##############################################################
 
 if 'gwas_list' in config:
   rule sumstat_prep_i:
@@ -70,9 +70,9 @@ if 'gwas_list' in config:
 rule sumstat_prep:
   input: expand(f"{outdir}/reference/gwas_sumstat/{{gwas}}/{{gwas}}-cleaned.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # LDSC
-##
+####################################################################
 
 rule ldsc_i:
   input:
@@ -110,9 +110,9 @@ rule ldsc_i:
 rule ldsc:
   input: expand(f"{outdir}/reference/ldsc/{{gwas}}/{{gwas}}.hsq_obs", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # pT+clump (sparse, nested)
-##
+####################################################################
 
 rule prep_pgs_ptclump_i:
   input:
@@ -144,9 +144,9 @@ rule prep_pgs_ptclump_i:
 rule prep_pgs_ptclump:
   input: expand(f"{outdir}/reference/pgs_score_files/ptclump/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # DBSLMM
-##
+####################################################################
 
 # Create function return SNP-h2
 def h2_file(w, gwas_list_df, outdir, config, force_observed=False):
@@ -223,9 +223,40 @@ rule prep_pgs_dbslmm_i:
 rule prep_pgs_dbslmm:
   input: expand(f"{outdir}/reference/pgs_score_files/dbslmm/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+##############################################################
+# VIPRS
+##############################################################
+
+rule prep_viprs_i:
+  threads: 1
+  input:
+    f"{outdir}/reference/gwas_sumstat/{{gwas}}/{{gwas}}-cleaned.gz"
+  output:
+    f"{outdir}/reference/pgs_score_files/viprs/{{gwas}}/ref-{{gwas}}.score.gz"
+  benchmark:
+    f"{outdir}/reference/benchmarks/prep_pgs_viprs_i-{{gwas}}.txt"
+  log:
+    f"{outdir}/reference/logs/prep_pgs_viprs_i-{{gwas}}.log"
+  conda:
+    "../envs/viprs.yaml"
+  params:
+    population= lambda w: gwas_list_df.loc[gwas_list_df['name'] == "{}".format(w.gwas), 'population'].iloc[0],
+    testing=config["testing"]
+  shell:
+    """
+    viprs_fit --l "{resdir}/data/viprs_ld/{params.population}/chr_*/" \
+         --sumstats {outdir}/reference/gwas_sumstat/{wildcards.gwas}/{wildcards.gwas}-cleaned.gz \
+         --output {outdir}/reference/pgs_score_files/viprs/{wildcards.gwas}/ref-{wildcards.gwas}; \
+    mv {outdir}/reference/pgs_score_files/viprs/{wildcards.gwas}/ref-{wildcards.gwas}.fit.gz {outdir}/reference/pgs_score_files/viprs/{wildcards.gwas}/ref-{wildcards.gwas}.score.gz
+    
+    """
+
+rule prep_pgs_viprs:
+  input: expand(f"{outdir}/reference/pgs_score_files/viprs/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
+
+####################################################################
 # PRScs
-##
+####################################################################
 # Note. Threads are set to 1, and phi and chr are run in parallel. Increasing number of threads shows no improvement in speed.
 
 rule prep_pgs_prscs_i:
@@ -272,9 +303,9 @@ rule prep_pgs_prscs_i:
 rule prep_pgs_prscs:
   input: expand(f"{outdir}/reference/pgs_score_files/prscs/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # SBayesR
-##
+####################################################################
 
 rule prep_pgs_sbayesr_i:
   resources:
@@ -329,9 +360,9 @@ rule prep_pgs_sbayesr_i:
 rule prep_pgs_sbayesr:
   input: expand(f"{outdir}/reference/target_checks/prep_pgs_sbayesr_i-{{gwas}}.done", gwas=gwas_list_df['name'])
     
-##
+####################################################################
 # lassosum
-##
+####################################################################
 
 rule prep_pgs_lassosum_i:
   resources:
@@ -369,9 +400,9 @@ rule prep_pgs_lassosum_i:
 rule prep_pgs_lassosum:
   input: expand(f"{outdir}/reference/pgs_score_files/lassosum/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+##############################################################
 # SDPR
-##
+##############################################################
 
 rule prep_pgs_sdpr_i:
   resources:
@@ -418,9 +449,9 @@ rule prep_pgs_sdpr_i:
 rule prep_pgs_sdpr:
   input: expand(f"{outdir}/reference/pgs_score_files/sdpr/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+##############################################################
 # LDpred2
-##
+##############################################################
 
 rule prep_pgs_ldpred2_i:
   resources:
@@ -472,9 +503,9 @@ rule prep_pgs_ldpred2_i:
 rule prep_pgs_ldpred2:
   input: expand(f"{outdir}/reference/pgs_score_files/ldpred2/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+##############################################################
 # lassosum2
-##
+##############################################################
 
 rule prep_pgs_lassosum2_i:
   resources:
@@ -515,9 +546,9 @@ rule prep_pgs_lassosum2_i:
 rule prep_pgs_lassosum2:
   input: expand(f"{outdir}/reference/pgs_score_files/lassosum2/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # LDAK MegaPRS
-##
+####################################################################
 
 rule prep_pgs_megaprs_i:
   resources:
@@ -604,9 +635,9 @@ rule prep_pgs_megaprs6_i:
 rule prep_pgs_megaprs6:
   input: expand(f"{outdir}/reference/pgs_score_files/megaprs6/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # LDAK QuickPRS
-##
+####################################################################
 
 def get_quickprs_ldref_path(w, gwas_list_df, resdir):
   # Get the population from the GWAS list
@@ -662,9 +693,9 @@ rule prep_pgs_quickprs_i:
 rule prep_pgs_quickprs:
   input: expand(f"{outdir}/reference/target_checks/prep_pgs_quickprs_i-{{gwas}}.done", gwas=gwas_list_df['name'])
 
-##
+##########################################################################
 # SBayesRC
-##
+##########################################################################
 
 rule prep_pgs_sbayesrc_i:
   resources:
@@ -708,9 +739,9 @@ rule prep_pgs_sbayesrc_i:
 rule prep_pgs_sbayesrc:
   input: expand(f"{outdir}/reference/pgs_score_files/sbayesrc/{{gwas}}/ref-{{gwas}}.score.gz", gwas=gwas_list_df['name'])
 
-##
+####################################################################
 # Process externally created score files
-##
+####################################################################
 
 # Download PGS score files for PGSC if path is NA
 rule download_pgs_external:
@@ -790,13 +821,13 @@ checkpoint score_reporter:
   shell:
     "Rscript ../Scripts/pipeline_misc/score_reporter.R {params.config_file} > {log} 2>&1"
 
-###########
+#################################################################
 # Multi-ancestry methods
-###########
+#################################################################
 
-####
+################################################################
 # LEOPARD 
-####
+################################################################
 
 # Estimate weights for population-specific PGS from single-source methods
 rule leopard_quickprs_i:
@@ -845,9 +876,9 @@ rule leopard_quickprs_i:
 rule leopard_quickprs:
   input: expand(f"{outdir}/reference/pgs_score_files/leopard/{{gwas_group}}/ref-{{gwas_group}}.weights.rds", gwas_group=gwas_groups_df['name'])
 
-####
+##########################################################
 # Combine single-source PGS using LEOPARD weights
-####
+##########################################################
 
 # Define the single_source methods that can be applied to non-EUR data
 single_source_methods = {"ptclump", "dbslmm", "prscs", "sbayesrc", "lassosum", "ldpred2", "lassosum2", "megaprs", "quickprs"}
@@ -883,9 +914,9 @@ rule prep_pgs_multi_i:
 rule prep_pgs_multi:
   input: expand(f"{outdir}/reference/pgs_score_files/{{method}}_multi/{{gwas_group}}/ref-{{gwas_group}}.score.gz", gwas_group=gwas_groups_df['name'], method = requested_single_source_methods)
 
-####
+##########################################################
 # Inverse-variance meta-analysis 
-####
+##########################################################
 
 # Estimate weights for population-specific PGS from single-source methods
 rule pgsmeta_i:
@@ -921,13 +952,13 @@ rule pgsmeta_i:
 rule pgsmeta:
   input: expand(f"{outdir}/reference/pgs_score_files/{{method}}_meta/{{gwas_group}}/ref-{{gwas_group}}.score.gz", gwas_group=gwas_groups_df['name'], method = requested_single_source_methods)
 
-#########
+#####################################################################
 # Jointly optimised methods
-#########
+#####################################################################
 
-####
+########################################
 # PRS-CSx
-####
+########################################
 
 # Note. Threads are set to 1, and phi and chr are run in parallel. Increasing number of threads shows no improvement in speed.
 
@@ -978,9 +1009,9 @@ rule prep_pgs_prscsx_i:
 rule prep_pgs_prscsx:
   input: expand(f"{outdir}/reference/pgs_score_files/prscsx/{{gwas_group}}/ref-{{gwas_group}}.score.gz", gwas_group=gwas_groups_df['name'])
 
-####
+##########################################################
 # X-WING
-####
+##########################################################
 
 rule prep_pgs_xwing_i:
   resources:
@@ -1036,9 +1067,9 @@ rule prep_pgs_xwing_i:
 rule prep_pgs_xwing:
   input: expand(f"{outdir}/reference/pgs_score_files/xwing/{{gwas_group}}/ref-{{gwas_group}}.score.gz", gwas_group=gwas_groups_df_two['name'])
 
-####
+####################################################
 # TL-PRS
-####
+####################################################
 
 rule prep_pgs_tlprs_i:
   resources:
@@ -1083,9 +1114,9 @@ rule prep_pgs_tlprs_i:
 rule prep_pgs_tlprs:
   input: expand(f"{outdir}/reference/pgs_score_files/tlprs_{{method}}/{{gwas_group}}/ref-{{gwas_group}}.score.gz", gwas_group=gwas_groups_df_two['name'], method=config["tlprs_methods"])
 
-####
+############################################################################
 # BridgePRS
-####
+############################################################################
 
 rule prep_pgs_bridgeprs_i:
   resources:
@@ -1172,7 +1203,7 @@ rule prep_pgs:
   input:
     pgs_methods_input
     
-##########################
+####################################################################
 
 # Calculate PGS in reference data
 rule ref_pgs:
