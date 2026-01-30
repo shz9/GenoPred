@@ -1,0 +1,9 @@
+name: viprs
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - numpy
+  - pip
+  - pip:
+      - viprs
